@@ -90,6 +90,10 @@ class KernelControl(NewlineDelimitedProtocol):
     def control_disconnect(self):
         self._t.close()
 
+    def disconnect_all(self):
+        for client in self.clients.values():
+            client.out('QUIT')
+
     def dispatch_method(self, msg):
         if msg.get('jsonrpc') != '2.0':
             self.control_disconnect()
@@ -408,6 +412,7 @@ def main():
         loop.run_forever()
     except KeyboardInterrupt:
         log('** Shutting down')
+        kc.disconnect_all()
         loop.stop()
 
 if __name__ == '__main__':
