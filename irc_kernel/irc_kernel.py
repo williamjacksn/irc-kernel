@@ -279,6 +279,7 @@ class IRCClient(NewlineDelimitedProtocol):
             self.out('PONG ' + tokens[1])
         elif len(tokens) > 1:
             if tokens[1] == '376':
+                self.nickserv_identify()
                 self.join_saved_channels()
 
     def connection_lost(self, exc):
@@ -316,6 +317,12 @@ class IRCClient(NewlineDelimitedProtocol):
     def log(self, m):
         log('[{}] {}'.format(self.name, m))
 
+    def nickserv_identify(self):
+        config = self.controller.config['networks'][self.name]
+        nickservpass = config.get('nickservpass')
+        if nickservpass is not None:
+            self.out('privmsg nickserv :identify {}'.format(nickservpass))
+
     def out(self, m):
         if m:
             m = '{}\r\n'.format(m).encode()
@@ -350,6 +357,7 @@ def generate_config(path: pathlib.Path):
                 'host': 'chat.freenode.net',
                 'port': 6667,
                 'nick': nick,
+                'nickservpass': None,
                 'realname': nick,
                 'user': nick,
                 'channels': ['#{}'.format(nick)]
