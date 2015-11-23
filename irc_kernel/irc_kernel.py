@@ -164,12 +164,13 @@ class KernelControl(NewlineDelimitedProtocol):
             return
         name = params.get('name')
         nick = params.get('nick')
+        nickservpass = params.get('nickservpass')
         port = params.get('port', 6667)
         realname = params.get('realname')
         user = params.get('user')
 
-        net = dict(host=host, nick=nick, port=port, realname=realname,
-                   user=user)
+        net = dict(host=host, nick=nick, nickservpass=nickservpass, port=port,
+                   realname=realname, user=user)
         net['channels'] = []
         saved_networks = self.config['networks']
         saved_networks[name] = net
