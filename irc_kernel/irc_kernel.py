@@ -86,6 +86,8 @@ class KernelControl(NewlineDelimitedProtocol):
 
     def connection_lost(self, exc):
         self.log('** Control connection closed')
+        for c in self.clients.values():
+            c.unsubscribe(self.irc_handler)
 
     def control_disconnect(self):
         self._t.close()
