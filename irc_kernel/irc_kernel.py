@@ -116,6 +116,8 @@ class KernelControl(NewlineDelimitedProtocol):
                 self.control_disconnect()
             if method == 'network.add':
                 return self.network_add(msg)
+            if method == 'network.connect':
+                return self.network_connect(msg)
             if method == 'network.delete':
                 return self.network_delete(msg)
             if method == 'network.get':
@@ -190,6 +192,26 @@ class KernelControl(NewlineDelimitedProtocol):
         asyncio.ensure_future(c)
         self.clients[name] = client
 
+        return {'result': 'success', 'id': msg.get('id'), 'jsonrpc': '2.0'}
+
+    def network_connect(self, msg):
+        params = msg.get('params')
+        name = params.get('name')
+        old_client = self.clients.get('name')
+        if old_client is None:
+            message = 'network.connect: unknown network {!r}'.format(name)
+            return {'jsonrpc': '2.0', 'id': msg.get('id'),
+                    'error': {'code': -32002, 'message': message}}
+        old_client.disconnect()
+        del self.clients[name]
+        net = self.config['networks'][name]
+        new_client = IRCClient(name, net, self)
+        if self.subscribed:
+            new_client.subscribe(self.irc_handler)
+        loop = asyncio.get_event_loop()
+        c = loop.create_connection(new_client, net['host'], net['port'])
+        asyncio.ensure_future(c)
+        self.clients[name] = new_client
         return {'result': 'success', 'id': msg.get('id'), 'jsonrpc': '2.0'}
 
     def network_delete(self, msg):
